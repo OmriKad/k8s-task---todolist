@@ -76,7 +76,7 @@ Option1: OCI install (from published chart)
 
 ```bash
 helm upgrade --install todolist-final \
-  oci://ghcr.io/<YOUR_GITHUB_USERNAME>/<YOUR_REPO_NAME>/todolist \
+  oci://ghcr.io/omrikad/k8s-task---todolist/todolist \
   --set secret.rootPassword='CHANGE_ME_STRONG_PASSWORD'
 ```
 
