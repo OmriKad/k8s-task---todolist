@@ -123,14 +123,14 @@ Local testing (recommended for Docker Desktop/kind/minikube):
 echo "127.0.0.1 todolist.local" | sudo tee -a /etc/hosts
 
 # forward ingress controller
-kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 8080:80
+kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 18080:80
 ```
 
 Windows (PowerShell as Administrator): add `127.0.0.1 todolist.local` to `C:\Windows\System32\drivers\etc\hosts`.
 
 Then open:
-- `http://todolist.local:8080`
-- `http://todolist.local:8080/todos`
+- `http://todolist.local:18080`
+- `http://todolist.local:18080/todos`
 
 Important:
 - Ingress routes: `/` -> frontend, `/todos` -> todo-api.
@@ -144,7 +144,7 @@ Important:
    - Confirm ingress controller is running:
      - `kubectl get pods -n ingress-nginx`
    - Confirm ingress port-forward is running:
-     - `kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 8080:80`
+     - `kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 18080:80`
    - Confirm frontend runtime config:
      - `kubectl exec deploy/webui -- wget -qO- http://127.0.0.1:8080/config.js`
    - `API_BASE_URL` should stay `/todos` for ingress mode.
