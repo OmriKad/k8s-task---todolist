@@ -116,17 +116,21 @@ Check env values from API pod:
 kubectl exec deploy/todo-api -- printenv | grep -E 'USER|MYSQL_HOST|MY_SQL_ROOT_PASSWORD|API_BASE_URL'
 ```
 
-If LoadBalancer IP is not ready yet, use port-forward:
+Local testing (recommended for Docker Desktop/kind/minikube):
 
 ```bash
-# add to /etc/hosts
-127.0.0.1 todolist.local
+# macOS/Linux: add host mapping
+echo "127.0.0.1 todolist.local" | sudo tee -a /etc/hosts
 
 # forward ingress controller
 kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 8080:80
 ```
 
-Then open `http://todolist.local:8080`.
+Windows (PowerShell as Administrator): add `127.0.0.1 todolist.local` to `C:\Windows\System32\drivers\etc\hosts`.
+
+Then open:
+- `http://todolist.local:8080`
+- `http://todolist.local:8080/todos`
 
 Important:
 - Ingress routes: `/` -> frontend, `/todos` -> todo-api.
