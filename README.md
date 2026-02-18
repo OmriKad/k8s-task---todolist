@@ -72,6 +72,16 @@ This is an original Helm chart implementation for a full todolist stack:
 
 ## Install
 
+Option1: OCI install (from published chart)
+
+```bash
+helm upgrade --install todolist-final \
+  oci://ghcr.io/<YOUR_GITHUB_USERNAME>/<YOUR_REPO_NAME>/todolist \
+  --set secret.rootPassword='CHANGE_ME_STRONG_PASSWORD'
+```
+
+Option2: Local install from source (run from this repository root)
+
 ```bash
 helm upgrade --install todolist-final ./todolist \
   --set secret.rootPassword='CHANGE_ME_STRONG_PASSWORD'
