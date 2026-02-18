@@ -142,29 +142,6 @@ Important:
      - Reusing the original password used at first install, or
      - Resetting the project DB state (uninstall + delete PVC + reinstall).
 
-## Package and Push Helm Chart to GHCR
-
-```bash
-helm package ./todolist
-helm registry login ghcr.io --username <YOUR_GITHUB_USERNAME>
-helm push todolist-0.1.0.tgz oci://ghcr.io/<YOUR_GITHUB_USERNAME>/<YOUR_REPO_NAME>
-```
-
-Install from GHCR OCI:
-
-```bash
-helm install my-release \
-  oci://ghcr.io/<YOUR_GITHUB_USERNAME>/<YOUR_REPO_NAME>/todolist \
-  --set secret.rootPassword='<YOUR_PASSWORD>'
-```
-
-Then change package visibility to **Public** in GitHub package settings.
-
-Submission note:
-- Replace `<YOUR_GITHUB_USERNAME>` and `<YOUR_REPO_NAME>` with your real values.
-- Include your actual public OCI chart reference in your submission, for example:
-  - `oci://ghcr.io/<your-github-username>/<your-repo-name>/todolist`
-
 ## Learning Notes
 
 1. `Deployment` is used for stateless frontend/API.
