@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "todolist.apiName" . }}
+  labels:
+    {{- include "todolist.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  replicas: {{ .Values.api.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "todolist.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        {{- include "todolist.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: api
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+    spec:
+      initContainers:
+        - name: wait-for-db
+          image: {{ .Values.api.initContainer.image | quote }}
+          env:
+            - name: DB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "todolist.fullname" . }}-secret
+                  key: MY_SQL_ROOT_PASSWORD
+          command: ["sh", "-c", "until mysqladmin ping -h {{ include "todolist.dbName" . }} -P {{ .Values.mariadb.port }} -u root -p\"$DB_ROOT_PASSWORD\" --silent; do echo waiting for mariadb; sleep 2; done"]
+      containers:
+        - name: api
+          image: {{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.api.containerPort }}
+              protocol: TCP
+          env:
+            - name: USER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "todolist.fullname" . }}-config
+                  key: USER
+            - name: MYSQL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "todolist.fullname" . }}-config
+                  key: MYSQL_HOST
+            - name: MYSQL_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "todolist.fullname" . }}-config
+                  key: MYSQL_USER
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "todolist.fullname" . }}-secret
+                  key: MYSQL_PASSWORD
+            - name: MYSQL_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "todolist.fullname" . }}-config
+                  key: MYSQL_DB
+            - name: MYSQL_TABLE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "todolist.fullname" . }}-config
+                  key: MYSQL_TABLE
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "todolist.fullname" . }}-config
+                  key: MYSQL_DATABASE
+            - name: MY_SQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "todolist.fullname" . }}-secret
+                  key: MY_SQL_ROOT_PASSWORD
+            - name: API_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "todolist.fullname" . }}-config
+                  key: API_BASE_URL
+          {{- if .Values.api.probes.enabled }}
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: {{ .Values.api.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.api.probes.periodSeconds }}
+            timeoutSeconds: {{ .Values.api.probes.timeoutSeconds }}
+            failureThreshold: {{ .Values.api.probes.failureThreshold }}
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: {{ .Values.api.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.api.probes.periodSeconds }}
+            timeoutSeconds: {{ .Values.api.probes.timeoutSeconds }}
+            failureThreshold: {{ .Values.api.probes.failureThreshold }}
+          {{- end }}
+          resources:
+            requests:
+              cpu: {{ .Values.api.resources.requests.cpu | quote }}
+              memory: {{ .Values.api.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.api.resources.limits.cpu | quote }}
+              memory: {{ .Values.api.resources.limits.memory | quote }}

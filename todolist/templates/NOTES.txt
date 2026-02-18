@@ -1,0 +1,32 @@
+Thank you for installing {{ .Chart.Name }}.
+
+1. Check workloads
+   kubectl get deploy,sts,svc,ingress,pods
+
+2. Ingress route
+   kubectl get ingress {{ include "todolist.fullname" . }}
+   Host: {{ .Values.ingress.host }}
+   Frontend path: {{ .Values.ingress.frontendPath }}
+   API path: {{ .Values.ingress.apiPath }}
+
+3. Frontend API_BASE_URL currently configured
+   {{ .Values.env.apiBaseUrl }}
+
+4. Local access for ingress-based routing
+   Add to /etc/hosts:
+   127.0.0.1 {{ .Values.ingress.host }}
+   Then forward ingress controller (example):
+   kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 8080:80
+   Open:
+   http://{{ .Values.ingress.host }}:8080
+
+5. API service
+   kubectl get svc {{ include "todolist.apiName" . }}
+
+6. Database DNS host configured for API
+   {{ .Values.env.mysqlHost }}
+
+7. Useful logs
+   kubectl logs deploy/{{ include "todolist.frontendName" . }}
+   kubectl logs deploy/{{ include "todolist.apiName" . }}
+   kubectl logs sts/{{ include "todolist.dbName" . }}

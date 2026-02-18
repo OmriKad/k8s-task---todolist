@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "todolist.dbName" . }}
+  labels:
+    {{- include "todolist.labels" . | nindent 4 }}
+    app.kubernetes.io/component: db
+spec:
+  serviceName: {{ include "todolist.dbName" . }}
+  replicas: {{ .Values.mariadb.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "todolist.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: db
+  template:
+    metadata:
+      labels:
+        {{- include "todolist.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: db
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: mariadb
+          image: "{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}"
+          imagePullPolicy: {{ .Values.mariadb.image.pullPolicy }}
+          ports:
+            - name: mysql
+              containerPort: {{ .Values.mariadb.port }}
+              protocol: TCP
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "todolist.fullname" . }}-secret
+                  key: MY_SQL_ROOT_PASSWORD
+            - name: MARIADB_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "todolist.fullname" . }}-config
+                  key: MYSQL_DATABASE
+            - name: MARIADB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "todolist.fullname" . }}-config
+                  key: MYSQL_USER
+            - name: MARIADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "todolist.fullname" . }}-secret
+                  key: MYSQL_PASSWORD
+          {{- if .Values.mariadb.probes.enabled }}
+          livenessProbe:
+            tcpSocket:
+              port: mysql
+            initialDelaySeconds: {{ .Values.mariadb.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.mariadb.probes.periodSeconds }}
+            timeoutSeconds: {{ .Values.mariadb.probes.timeoutSeconds }}
+            failureThreshold: {{ .Values.mariadb.probes.failureThreshold }}
+          readinessProbe:
+            tcpSocket:
+              port: mysql
+            initialDelaySeconds: {{ .Values.mariadb.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.mariadb.probes.periodSeconds }}
+            timeoutSeconds: {{ .Values.mariadb.probes.timeoutSeconds }}
+            failureThreshold: {{ .Values.mariadb.probes.failureThreshold }}
+          {{- end }}
+          resources:
+            requests:
+              cpu: {{ .Values.mariadb.resources.requests.cpu | quote }}
+              memory: {{ .Values.mariadb.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.mariadb.resources.limits.cpu | quote }}
+              memory: {{ .Values.mariadb.resources.limits.memory | quote }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+      {{- if not .Values.mariadb.persistence.enabled }}
+      volumes:
+        - name: data
+          emptyDir: {}
+      {{- end }}
+  {{- if .Values.mariadb.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [{{ .Values.mariadb.persistence.accessMode | quote }}]
+        resources:
+          requests:
+            storage: {{ .Values.mariadb.persistence.size | quote }}
+        {{- if .Values.mariadb.persistence.storageClass }}
+        storageClassName: {{ .Values.mariadb.persistence.storageClass | quote }}
+        {{- end }}
+  {{- end }}

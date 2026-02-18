@@ -1,0 +1,9 @@
+apiVersion: v2
+name: todolist
+description: Helm chart for a full todolist app (web UI + REST API + MariaDB)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+maintainers:
+  - name: Omri Kadmon
+    email: omrika@mta.ac.il

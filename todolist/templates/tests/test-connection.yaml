@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "todolist.fullname" . }}-test-connection"
+  labels:
+    {{- include "todolist.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox:1.36
+      command: ['sh', '-c', 'wget -qO- http://{{ include "todolist.frontendName" . }}:{{ .Values.frontend.service.port }} >/dev/null']
+  restartPolicy: Never
